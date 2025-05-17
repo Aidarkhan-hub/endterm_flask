@@ -3,7 +3,7 @@
 {% block content %}
 <h2>Add New Post</h2>
 
-<form method="post" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 14px;">
+<form method="post" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 14px;" onsubmit="return checkFileSize();">
 
     <input type="text" name="title" placeholder="Title" required
            style="padding: 10px; border-radius: 6px; border: 1px solid #ccc;">
@@ -11,7 +11,7 @@
     <textarea name="content" placeholder="Content" rows="5" required
               style="padding: 10px; border-radius: 6px; border: 1px solid #ccc;"></textarea>
 
-    <!-- Красивая кнопка выбора файла -->
+    <!-- Скрытый input и кастомная кнопка -->
     <input type="file" name="image" id="image" accept="image/*" style="display: none;">
     <label for="image" style="
         display: inline-block;
@@ -26,8 +26,14 @@
     ">
         📷 Choose Image
     </label>
+
+    <!-- Имя файла -->
     <span id="file-name" style="font-size: 0.9rem; color: #555;"></span>
 
+    <!-- Превью изображения -->
+    <img id="preview" style="display: none; max-width: 100%; border-radius: 8px; margin-top: 10px;"/>
+
+    <!-- Кнопка отправки -->
     <button type="submit"
             style="background-color: #007bff; color: white; padding: 10px; border: none; border-radius: 6px; font-weight: bold;">
         Add
@@ -38,12 +44,37 @@
     <a href="/">← Back</a>
 </div>
 
-<!-- JS: показать имя файла -->
+<!-- JavaScript -->
 <script>
   const input = document.getElementById('image');
   const span = document.getElementById('file-name');
+  const preview = document.getElementById('preview');
+
   input.addEventListener('change', function () {
-    span.textContent = this.files.length > 0 ? this.files[0].name : '';
+    const file = this.files[0];
+    if (file) {
+      span.textContent = file.name;
+
+      // Превью
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    } else {
+      span.textContent = '';
+      preview.style.display = 'none';
+    }
   });
+
+  function checkFileSize() {
+    const file = input.files[0];
+    if (file && file.size > 2 * 1024 * 1024) {
+      alert("Image must be less than 2MB.");
+      return false;
+    }
+    return true;
+  }
 </script>
 {% endblock %}
