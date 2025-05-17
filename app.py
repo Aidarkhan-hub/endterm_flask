@@ -1,8 +1,18 @@
+import os
 from flask import render_template, request, redirect, url_for, flash, session
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from flask_migrate import Migrate
 from functools import wraps
 from models import app, db, User, Post
+
+# Конфигурация загрузки изображений
+UPLOAD_FOLDER = 'static/uploads'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Убедись, что папка существует
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 migrate = Migrate(app, db)
 
@@ -11,10 +21,13 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
-            flash('Вы должны войти в систему.')
+            flash('You must be logged in.')
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route('/')
 @login_required
@@ -29,17 +42,17 @@ def register():
         username = request.form['username']
         password = request.form['password']
         if not username or not password:
-            flash('Поля не должны быть пустыми.')
+            flash('Fields cannot be empty.')
             return redirect(url_for('register'))
         existing_user = User.query.filter_by(username=username).first()
         if existing_user:
-            flash('Пользователь уже существует!')
+            flash('User already exists!')
             return redirect(url_for('register'))
         hashed_password = generate_password_hash(password)
         new_user = User(username=username, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
-        flash('Пользователь успешно зарегистрирован!')
+        flash('User registered successfully!')
         return redirect(url_for('login'))
     return render_template('register.html')
 
@@ -51,17 +64,17 @@ def login():
         user = User.query.filter_by(username=username).first()
         if user and check_password_hash(user.password, password):
             session['user_id'] = user.id
-            flash('Успешный вход!')
+            flash('Login successful!')
             return redirect(url_for('home'))
         else:
-            flash('Неверные данные!')
+            flash('Invalid credentials!')
             return redirect(url_for('login'))
     return render_template('login.html')
 
 @app.route('/logout')
 def logout():
     session.pop('user_id', None)
-    flash('Вы вышли из системы.')
+    flash('You have logged out.')
     return redirect(url_for('login'))
 
 @app.route('/add_post', methods=['GET', 'POST'])
@@ -70,14 +83,23 @@ def add_post():
     if request.method == 'POST':
         title = request.form['title'].strip()
         content = request.form['content'].strip()
+        image = request.files.get('image')
+
         if not title or not content:
-            flash('Поля "Заголовок" и "Содержание" не могут быть пустыми.')
+            flash('Title and content cannot be empty.')
             return redirect(url_for('add_post'))
 
-        post = Post(title=title, content=content, user_id=session['user_id'])
+        image_filename = None
+        if image and allowed_file(image.filename):
+            filename = secure_filename(image.filename)
+            image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            image.save(image_path)
+            image_filename = filename
+
+        post = Post(title=title, content=content, image_filename=image_filename, user_id=session['user_id'])
         db.session.add(post)
         db.session.commit()
-        flash('Пост успешно добавлен!')
+        flash('Post successfully added!')
         return redirect(url_for('home'))
 
     return render_template('add_post.html')
@@ -87,18 +109,18 @@ def add_post():
 def edit_post(post_id):
     post = Post.query.get_or_404(post_id)
     if post.user_id != session['user_id']:
-        flash('У вас нет доступа к этому посту.')
+        flash('You do not have permission to edit this post.')
         return redirect(url_for('home'))
 
     if request.method == 'POST':
         post.title = request.form['title'].strip()
         post.content = request.form['content'].strip()
         if not post.title or not post.content:
-            flash('Поля не могут быть пустыми.')
+            flash('Fields cannot be empty.')
             return redirect(url_for('edit_post', post_id=post_id))
 
         db.session.commit()
-        flash('Пост обновлён.')
+        flash('Post updated.')
         return redirect(url_for('home'))
 
     return render_template('edit_post.html', post=post)
@@ -108,12 +130,17 @@ def edit_post(post_id):
 def delete_post(post_id):
     post = Post.query.get_or_404(post_id)
     if post.user_id != session['user_id']:
-        flash('Вы не можете удалить этот пост.')
+        flash('You cannot delete this post.')
         return redirect(url_for('home'))
+
+    if post.image_filename:
+        image_path = os.path.join(app.config['UPLOAD_FOLDER'], post.image_filename)
+        if os.path.exists(image_path):
+            os.remove(image_path)
 
     db.session.delete(post)
     db.session.commit()
-    flash('Пост удалён.')
+    flash('Post deleted.')
     return redirect(url_for('home'))
 
 if __name__ == '__main__':
