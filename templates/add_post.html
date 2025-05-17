@@ -1,13 +1,49 @@
 {% extends "base.html" %}
-{% block title %}Добавить пост{% endblock %}
+{% block title %}Add Post{% endblock %}
 {% block content %}
-<h2>Добавить новый пост</h2>
-<form method="post">
-    <input type="text" name="title" placeholder="Заголовок" required>
-    <textarea name="content" placeholder="Содержание" rows="5" required></textarea>
-    <button type="submit">Добавить</button>
+<h2>Add New Post</h2>
+
+<form method="post" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 14px;">
+
+    <input type="text" name="title" placeholder="Title" required
+           style="padding: 10px; border-radius: 6px; border: 1px solid #ccc;">
+
+    <textarea name="content" placeholder="Content" rows="5" required
+              style="padding: 10px; border-radius: 6px; border: 1px solid #ccc;"></textarea>
+
+    <!-- Красивая кнопка выбора файла -->
+    <input type="file" name="image" id="image" accept="image/*" style="display: none;">
+    <label for="image" style="
+        display: inline-block;
+        padding: 10px 16px;
+        background-color: #6c63ff;
+        color: white;
+        border-radius: 6px;
+        text-align: center;
+        cursor: pointer;
+        font-weight: bold;
+        width: fit-content;
+    ">
+        📷 Choose Image
+    </label>
+    <span id="file-name" style="font-size: 0.9rem; color: #555;"></span>
+
+    <button type="submit"
+            style="background-color: #007bff; color: white; padding: 10px; border: none; border-radius: 6px; font-weight: bold;">
+        Add
+    </button>
 </form>
-<div class="links">
-    <a href="/">← Вернуться</a>
+
+<div class="links" style="margin-top: 12px;">
+    <a href="/">← Back</a>
 </div>
+
+<!-- JS: показать имя файла -->
+<script>
+  const input = document.getElementById('image');
+  const span = document.getElementById('file-name');
+  input.addEventListener('change', function () {
+    span.textContent = this.files.length > 0 ? this.files[0].name : '';
+  });
+</script>
 {% endblock %}
