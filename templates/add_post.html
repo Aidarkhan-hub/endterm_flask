@@ -3,7 +3,8 @@
 {% block content %}
 <h2>Add New Post</h2>
 
-<form method="post" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 14px;" onsubmit="return checkFileSize();">
+<form method="post" enctype="multipart/form-data" id="postForm"
+      style="display: flex; flex-direction: column; gap: 14px;">
 
     <input type="text" name="title" placeholder="Title" required
            style="padding: 10px; border-radius: 6px; border: 1px solid #ccc;">
@@ -11,8 +12,10 @@
     <textarea name="content" placeholder="Content" rows="5" required
               style="padding: 10px; border-radius: 6px; border: 1px solid #ccc;"></textarea>
 
-    <!-- Скрытый input и кастомная кнопка -->
+    <!-- Hidden file input -->
     <input type="file" name="image" id="image" accept="image/*" style="display: none;">
+
+    <!-- Custom styled label as file picker -->
     <label for="image" style="
         display: inline-block;
         padding: 10px 16px;
@@ -27,13 +30,13 @@
         📷 Choose Image
     </label>
 
-    <!-- Имя файла -->
+    <!-- File name -->
     <span id="file-name" style="font-size: 0.9rem; color: #555;"></span>
 
-    <!-- Превью изображения -->
+    <!-- Image preview -->
     <img id="preview" style="display: none; max-width: 100%; border-radius: 8px; margin-top: 10px;"/>
 
-    <!-- Кнопка отправки -->
+    <!-- Submit button -->
     <button type="submit"
             style="background-color: #007bff; color: white; padding: 10px; border: none; border-radius: 6px; font-weight: bold;">
         Add
@@ -50,12 +53,12 @@
   const span = document.getElementById('file-name');
   const preview = document.getElementById('preview');
 
+  // Обработка выбора файла и превью
   input.addEventListener('change', function () {
     const file = this.files[0];
     if (file) {
       span.textContent = file.name;
 
-      // Превью
       const reader = new FileReader();
       reader.onload = function (e) {
         preview.src = e.target.result;
@@ -68,13 +71,34 @@
     }
   });
 
-  function checkFileSize() {
+  // Проверка формы при отправке
+  document.getElementById('postForm').addEventListener('submit', function (e) {
+    const title = document.querySelector('input[name="title"]');
+    const content = document.querySelector('textarea[name="content"]');
     const file = input.files[0];
+
+    title.setCustomValidity('');
+    content.setCustomValidity('');
+
+    if (!title.value.trim()) {
+      title.setCustomValidity('Please enter a title!');
+      title.reportValidity();
+      e.preventDefault();
+      return;
+    }
+
+    if (!content.value.trim()) {
+      content.setCustomValidity('Please enter the content!');
+      content.reportValidity();
+      e.preventDefault();
+      return;
+    }
+
     if (file && file.size > 2 * 1024 * 1024) {
       alert("Image must be less than 2MB.");
-      return false;
+      e.preventDefault();
+      return;
     }
-    return true;
-  }
+  });
 </script>
 {% endblock %}
