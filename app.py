@@ -6,7 +6,7 @@ from models import app, db, User, Post
 
 migrate = Migrate(app, db)
 
-# Самописный декоратор для защиты маршрутов
+# Декоратор авторизации
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -81,6 +81,40 @@ def add_post():
         return redirect(url_for('home'))
 
     return render_template('add_post.html')
+
+@app.route('/edit_post/<int:post_id>', methods=['GET', 'POST'])
+@login_required
+def edit_post(post_id):
+    post = Post.query.get_or_404(post_id)
+    if post.user_id != session['user_id']:
+        flash('У вас нет доступа к этому посту.')
+        return redirect(url_for('home'))
+
+    if request.method == 'POST':
+        post.title = request.form['title'].strip()
+        post.content = request.form['content'].strip()
+        if not post.title or not post.content:
+            flash('Поля не могут быть пустыми.')
+            return redirect(url_for('edit_post', post_id=post_id))
+
+        db.session.commit()
+        flash('Пост обновлён.')
+        return redirect(url_for('home'))
+
+    return render_template('edit_post.html', post=post)
+
+@app.route('/delete_post/<int:post_id>', methods=['POST'])
+@login_required
+def delete_post(post_id):
+    post = Post.query.get_or_404(post_id)
+    if post.user_id != session['user_id']:
+        flash('Вы не можете удалить этот пост.')
+        return redirect(url_for('home'))
+
+    db.session.delete(post)
+    db.session.commit()
+    flash('Пост удалён.')
+    return redirect(url_for('home'))
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,17 +1,27 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
-<h2>Добро пожаловать, {{ user.username }}!</h2>
-<p><a href="/add_post">Добавить новый пост</a> | <a href="/logout">Выйти</a></p>
 
+<h2>Welcome, {{ user.username }}!</h2>
+<p><a href="/add_post">➕ Add new post</a> | <a href="/logout">Logout</a></p>
 <hr>
+
 {% for post in posts %}
-    <div class="post">
-        <h3>{{ post.title }}</h3>
-        <p>{{ post.content }}</p>
-        <hr>
+  <div class="post">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h3 style="margin: 0;">{{ post.title }}</h3>
+      <a href="{{ url_for('edit_post', post_id=post.id) }}" style="font-size: 0.9rem; text-decoration: none;">✏️ Edit</a>
     </div>
+    <p>{{ post.content }}</p>
+    <form action="{{ url_for('delete_post', post_id=post.id) }}" method="post">
+      <button type="submit" style="width: 100%; background-color: #007bff; color: white; padding: 10px; border: none; border-radius: 6px; font-weight: bold;">
+        🗑 Delete
+      </button>
+    </form>
+    <hr>
+  </div>
 {% else %}
-    <p>У вас пока нет постов.</p>
+  <p>You haven't added any posts yet.</p>
 {% endfor %}
+
 {% endblock %}
