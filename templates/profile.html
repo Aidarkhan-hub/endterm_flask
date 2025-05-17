@@ -1,10 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+<div style="display: flex; gap: 40px; align-items: flex-start;">
 
-</body>
-</html>
+  <!-- Левая панель: профиль -->
+  <div style="min-width: 250px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+    <h3><strong>@{{ user.username }}</strong></h3>
+    <p>{{ user.email }}</p>
+    <p>📌 {{ user.posts|length }} posts</p>
+    <a href="{{ url_for('add_post') }}" class="btn btn-primary mt-2">New Post</a>
+  </div>
+
+  <!-- Правая панель: посты -->
+  <div style="flex: 1;">
+    <h3>My Posts</h3>
+    {% for post in posts %}
+      <div style="background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
+        <p style="font-size: 0.85rem; color: gray;">🕒 {{ post.created_at.strftime('%H:%M %d.%m.%Y') }}</p>
+        <h5><strong>{{ post.title }}</strong></h5>
+        <p>{{ post.content }}</p>
+        {% if post.image_path %}
+          <img src="{{ url_for('static', filename='uploads/' ~ post.image_path) }}" style="max-width: 100%; border-radius: 8px;" alt="Post image">
+        {% endif %}
+        <div class="mt-2">
+          <a href="{{ url_for('edit_post', post_id=post.id) }}" class="btn btn-sm btn-outline-primary">✏️ Edit</a>
+          <a href="{{ url_for('delete_post', post_id=post.id) }}" class="btn btn-sm btn-outline-danger">🗑️ Delete</a>
+        </div>
+      </div>
+    {% else %}
+      <p>No posts yet.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
