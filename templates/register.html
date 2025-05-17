@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}Register{% endblock %}
+{% block title %}Регистрация{% endblock %}
 {% block content %}
-<h2>Register</h2>
+<h2>Регистрация</h2>
 <form method="post">
-    <input type="text" name="username" placeholder="Username" required>
-    <input type="password" name="password" placeholder="Password" required>
-    <button type="submit">Register</button>
+    <input type="text" name="username" placeholder="Имя пользователя" required>
+    <input type="password" name="password" placeholder="Пароль" required>
+    <button type="submit">Зарегистрироваться</button>
 </form>
 <div class="links">
     <p>Уже есть аккаунт? <a href="/login">Войти</a></p>
