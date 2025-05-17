@@ -35,4 +35,50 @@ A minimal and functional web application built with **Flask**, **SQLite**, and *
 ---
 
 ## 🗃️ Project Structure
+endterm_flask/
+├── static/
+│ └── uploads/ # Uploaded images
+├── templates/
+│ ├── base.html
+│ ├── login.html
+│ ├── register.html
+│ ├── dashboard.html
+│ ├── add_post.html
+│ ├── edit_post.html
+│ ├── profile.html
+│ └── feed.html
+├── app.py # Main application logic
+├── models.py # SQLAlchemy models
+├── requirements.txt
+└── README.md # This file
+
+Install dependencies
+pip install -r requirements.txt
+
+Initialize DB
+flask db init
+flask db migrate -m "Initial migration"
+flask db upgrade
+
+
+Run the server
+flask run
+
+ER Diagram
+User
+----
+id (PK)
+username
+password
+
+Post
+----
+id (PK)
+title
+content
+image_filename
+user_id (FK → User.id)
+
+
+
 
