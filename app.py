@@ -1,18 +1,27 @@
 from flask import render_template, request, redirect, url_for, flash, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
+from functools import wraps
 from models import app, db, User, Post
 
 migrate = Migrate(app, db)
 
+# Самописный декоратор для защиты маршрутов
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Вы должны войти в систему.')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.route('/')
+@login_required
 def home():
-    if 'user_id' in session:
-        user = User.query.get(session['user_id'])
-        posts = Post.query.filter_by(user_id=user.id).all()
-        return render_template('dashboard.html', user=user, posts=posts)
-    return redirect(url_for('login'))
+    user = User.query.get(session['user_id'])
+    posts = Post.query.filter_by(user_id=user.id).all()
+    return render_template('dashboard.html', user=user, posts=posts)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -56,11 +65,8 @@ def logout():
     return redirect(url_for('login'))
 
 @app.route('/add_post', methods=['GET', 'POST'])
+@login_required
 def add_post():
-    if 'user_id' not in session:
-        flash('Сначала войдите в систему.')
-        return redirect(url_for('login'))
-
     if request.method == 'POST':
         title = request.form['title'].strip()
         content = request.form['content'].strip()
